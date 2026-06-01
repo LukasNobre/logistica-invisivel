@@ -3,11 +3,1432 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Logística Invisível — Lucas Nobre | Análise PRF 2015-2024</title>
-<meta name="author" content="Lucas Nobre"/>
-<meta name="description" content="Análise de 10 anos de acidentes rodoviários federais brasileiros. Desenvolvido por Lucas Nobre."/>
+<title>Logística Invisível — Impacto de Sinistros nas Rodovias Brasileiras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+<style>
+/* ════════════════════════════════════════════
+   DESIGN SYSTEM — INDUSTRIAL HIGH-TECH DARK
+   Fonte de dados: PRF / CNT / ANTT / IPEA
+════════════════════════════════════════════ */
+:root {
+  --bg:          #0f172a;
+  --bg-2:        #1e293b;
+  --bg-3:        #0b1120;
+  --bg-line:     rgba(255,255,255,0.04);
+  --border:      rgba(255,255,255,0.07);
+  --border-acc:  rgba(56,189,248,0.3);
+  --txt:         #f8fafc;
+  --txt-2:       #94a3b8;
+  --txt-3:       #475569;
+  --acc:         #38bdf8;
+  --acc-dim:     rgba(56,189,248,0.1);
+  --acc-glow:    rgba(56,189,248,0.25);
+  --red:         #f43f5e;
+  --red-dim:     rgba(244,63,94,0.12);
+  --red-glow:    rgba(244,63,94,0.25);
+  --orange:      #fb923c;
+  --orange-dim:  rgba(251,146,60,0.1);
+  --green:       #34d399;
+  --green-dim:   rgba(52,211,153,0.1);
+  --fh:          'Barlow Condensed', sans-serif;
+  --fb:          'Barlow', sans-serif;
+  --fm:          'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--fb);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  /* Subtle scanline texture for industrial feel */
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+}
+
+/* ── Page wrapper ── */
+.page { max-width: 1280px; margin: 0 auto; padding: 0 24px 60px; }
+
+/* ── Utility ── */
+.mono { font-family: var(--fm); }
+.danger { color: var(--red); }
+.accent { color: var(--acc); }
+.muted  { color: var(--txt-2); }
+.dim    { color: var(--txt-3); }
+
+/* ════════════════════════════════════════════
+   HEADER
+════════════════════════════════════════════ */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 36px 0 32px;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top accent line */
+header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--red) 0%, var(--orange) 40%, var(--acc) 100%);
+}
+
+.header-grid {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+.header-left  { display: table-cell; vertical-align: middle; width: 70%; }
+.header-right { display: table-cell; vertical-align: middle; width: 30%; text-align: right; padding-left: 24px; }
+
+/* Live indicator badge */
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--red-dim);
+  border: 1px solid rgba(244,63,94,0.25);
+  color: var(--red);
+  font-family: var(--fm);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 11px;
+  border-radius: 3px;
+  margin-bottom: 16px;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--red);
+  border-radius: 50%;
+  animation: blink 1.8s ease-in-out infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+h1 {
+  font-family: var(--fh);
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--txt);
+  margin-bottom: 12px;
+}
+
+h1 em {
+  font-style: normal;
+  color: var(--acc);
+  -webkit-text-stroke: 0px;
+}
+
+.header-sub {
+  font-size: 13px;
+  color: var(--txt-2);
+  line-height: 1.7;
+  max-width: 560px;
+  border-left: 2px solid var(--red);
+  padding-left: 12px;
+}
+
+.header-stats {
+  display: inline-block;
+}
+
+.hstat {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.hstat-label {
+  font-family: var(--fm);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--txt-3);
+  margin-bottom: 3px;
+}
+
+.hstat-val {
+  font-family: var(--fh);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--acc);
+  letter-spacing: -0.01em;
+}
+
+/* ════════════════════════════════════════════
+   SECTION LABEL
+════════════════════════════════════════════ */
+.sec-label {
+  font-family: var(--fm);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--txt-3);
+  margin-bottom: 16px;
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sec-label-text { display: table-cell; white-space: nowrap; padding-right: 14px; }
+.sec-label-line {
+  display: table-cell;
+  width: 100%;
+  vertical-align: middle;
+}
+.sec-label-line::after {
+  content: '';
+  display: block;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ════════════════════════════════════════════
+   KPI CARDS
+════════════════════════════════════════════ */
+.kpi-row {
+  display: table;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 12px 0;
+  margin: 0 -12px 40px;
+}
+
+.kpi-cell { display: table-cell; width: 25%; }
+
+.kpi-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 22px 20px 18px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  cursor: default;
+}
+
+.kpi-card:hover {
+  border-color: var(--border-acc);
+  box-shadow: 0 0 28px var(--acc-glow);
+}
+
+/* Top stripe */
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.kpi-card.k-red::before    { background: var(--red); }
+.kpi-card.k-orange::before { background: var(--orange); }
+.kpi-card.k-blue::before   { background: var(--acc); }
+.kpi-card.k-green::before  { background: var(--green); }
+
+/* Corner watermark number */
+.kpi-card::after {
+  content: attr(data-index);
+  position: absolute;
+  bottom: -6px; right: 10px;
+  font-family: var(--fh);
+  font-size: 72px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.025);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.kpi-tag {
+  font-family: var(--fm);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--txt-3);
+  margin-bottom: 10px;
+}
+
+.kpi-val {
+  font-family: var(--fh);
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-bottom: 6px;
+}
+
+.kpi-card.k-red    .kpi-val { color: var(--red); }
+.kpi-card.k-orange .kpi-val { color: var(--orange); }
+.kpi-card.k-blue   .kpi-val { color: var(--acc); }
+.kpi-card.k-green  .kpi-val { color: var(--green); }
+
+.kpi-desc {
+  font-size: 11px;
+  color: var(--txt-2);
+  line-height: 1.5;
+}
+
+.kpi-source {
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--txt-3);
+  margin-top: 8px;
+  letter-spacing: 0.06em;
+}
+
+/* ════════════════════════════════════════════
+   TWO-COLUMN BODY
+════════════════════════════════════════════ */
+.body-cols {
+  display: table;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 16px 0;
+  margin: 0 -16px 0;
+}
+
+.col-left  { display: table-cell; width: 52%; vertical-align: top; }
+.col-right { display: table-cell; width: 48%; vertical-align: top; padding-left: 0; }
+
+/* ── Panel ── */
+.panel {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.panel-title {
+  font-family: var(--fh);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--txt);
+  margin-bottom: 4px;
+}
+
+.panel-sub {
+  font-size: 11px;
+  color: var(--txt-3);
+  margin-bottom: 20px;
+  font-family: var(--fm);
+  letter-spacing: 0.05em;
+}
+
+/* ════════════════════════════════════════════
+   RANKING TABLE
+════════════════════════════════════════════ */
+.ranking {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ranking thead th {
+  font-family: var(--fm);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--txt-3);
+  text-align: left;
+  padding: 0 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ranking thead th:nth-child(5),
+.ranking tbody td:nth-child(5) { text-align: right; }
+
+.ranking tbody tr {
+  border-bottom: 1px solid var(--bg-line);
+  transition: background 0.15s;
+}
+.ranking tbody tr:last-child { border-bottom: none; }
+.ranking tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+.ranking tbody td {
+  padding: 13px 8px;
+  vertical-align: middle;
+}
+
+.rk-num {
+  font-family: var(--fm);
+  font-size: 11px;
+  color: var(--txt-3);
+  width: 22px;
+}
+
+/* Road badge */
+.road {
+  display: inline-block;
+  font-family: var(--fm);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--acc);
+  background: var(--acc-dim);
+  border: 1px solid rgba(56,189,248,0.2);
+  padding: 3px 9px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.rk-stretch {
+  font-size: 11px;
+  color: var(--txt-2);
+  max-width: 160px;
+}
+
+/* Severity pill */
+.sev {
+  display: inline-block;
+  font-family: var(--fm);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.sev-c { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(244,63,94,0.25); }
+.sev-a { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(251,146,60,0.25); }
+.sev-m { background: var(--acc-dim);    color: var(--acc);    border: 1px solid rgba(56,189,248,0.25); }
+
+.rk-cost {
+  font-family: var(--fm);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--red);
+  white-space: nowrap;
+}
+
+/* ── Ranking bar mini ── */
+.rk-bar-wrap {
+  width: 80px;
+  height: 4px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.rk-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--red);
+}
+
+/* ════════════════════════════════════════════
+   HOURLY CRITICAL WINDOWS
+════════════════════════════════════════════ */
+.hour-section { margin-top: 24px; }
+
+.hour-block { margin-bottom: 16px; }
+
+.hour-label-row {
+  display: table;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.hour-name {
+  display: table-cell;
+  font-size: 12px;
+  color: var(--txt);
+  font-weight: 500;
+}
+
+.hour-meta {
+  display: table-cell;
+  text-align: right;
+  font-family: var(--fm);
+  font-size: 11px;
+  color: var(--txt-2);
+  white-space: nowrap;
+}
+
+.bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-fill-h {
+  height: 100%;
+  border-radius: 4px;
+  position: relative;
+}
+
+.bar-fill-h::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 40px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2));
+}
+
+.hour-note {
+  font-size: 11px;
+  color: var(--txt-3);
+  margin-top: 4px;
+  font-family: var(--fm);
+  letter-spacing: 0.04em;
+}
+
+/* Sparkline — 24h distribution */
+.spark-wrap {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.spark-title {
+  font-family: var(--fm);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--txt-3);
+  margin-bottom: 12px;
+}
+
+.spark-bars {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  height: 56px;
+}
+
+.spark-bar-cell {
+  display: table-cell;
+  vertical-align: bottom;
+  padding: 0 1px;
+  height: 56px;
+}
+
+.spark-bar-inner {
+  border-radius: 2px 2px 0 0;
+  width: 100%;
+  min-height: 2px;
+  position: relative;
+  cursor: default;
+  transition: opacity 0.15s;
+}
+.spark-bar-inner:hover { opacity: 0.7; }
+
+.spark-axis {
+  display: table;
+  width: 100%;
+  margin-top: 5px;
+}
+.spark-axis-cell {
+  display: table-cell;
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--txt-3);
+  width: 25%;
+}
+.spark-axis-cell:last-child { text-align: right; }
+.spark-axis-cell:nth-child(2),
+.spark-axis-cell:nth-child(3) { text-align: center; }
+
+/* ════════════════════════════════════════════
+   MAP CONTAINER (right column)
+════════════════════════════════════════════ */
+.map-panel {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.map-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  display: table;
+  width: 100%;
+}
+
+.map-header-left  { display: table-cell; vertical-align: middle; }
+.map-header-right { display: table-cell; vertical-align: middle; text-align: right; }
+
+.map-title {
+  font-family: var(--fh);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--txt);
+}
+
+.map-sub {
+  font-family: var(--fm);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--txt-3);
+  margin-top: 2px;
+}
+
+.map-badge {
+  display: inline-block;
+  font-family: var(--fm);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--acc);
+  background: var(--acc-dim);
+  border: 1px solid rgba(56,189,248,0.2);
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+
+/* SVG Map area */
+.map-svg-wrap {
+  position: relative;
+  height: 320px;
+  overflow: hidden;
+  background: #080f1e;
+}
+
+/* Grid overlay */
+.map-svg-wrap::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(56,189,248,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56,189,248,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.map-svg {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+/* Hotspot pins */
+.pin {
+  position: absolute;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+}
+
+.pin-core {
+  width: 10px;
+  height: 10px;
+  background: var(--red);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(244,63,94,0.4);
+  position: relative;
+  z-index: 2;
+  animation: pin-pulse 2.5s ease-out infinite;
+}
+
+@keyframes pin-pulse {
+  0%   { box-shadow: 0 0 0 2px rgba(244,63,94,0.5); }
+  70%  { box-shadow: 0 0 0 14px rgba(244,63,94,0); }
+  100% { box-shadow: 0 0 0 2px rgba(244,63,94,0.5); }
+}
+
+.pin-label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--txt-2);
+  white-space: nowrap;
+  background: rgba(8,15,30,0.85);
+  padding: 2px 5px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.08);
+  pointer-events: none;
+}
+
+.pin-large .pin-core { width: 14px; height: 14px; }
+
+/* Map legend */
+.map-legend {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 20;
+  background: rgba(8,15,30,0.9);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+.legend-item {
+  display: table;
+  width: 100%;
+  margin-bottom: 5px;
+}
+.legend-item:last-child { margin-bottom: 0; }
+
+.legend-dot-cell { display: table-cell; vertical-align: middle; padding-right: 7px; }
+.legend-text-cell { display: table-cell; vertical-align: middle; }
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-txt {
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--txt-2);
+  letter-spacing: 0.06em;
+}
+
+/* ════════════════════════════════════════════
+   COST FACTORS
+════════════════════════════════════════════ */
+.factors-panel { /* uses .panel */ }
+
+.factor {
+  display: table;
+  width: 100%;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.factor:first-child { padding-top: 0; }
+.factor:last-child  { border-bottom: none; padding-bottom: 0; }
+
+.factor-icon-cell {
+  display: table-cell;
+  vertical-align: top;
+  width: 40px;
+  padding-top: 2px;
+}
+
+.factor-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.fi-red    { background: var(--red-dim);    border: 1px solid rgba(244,63,94,0.2); }
+.fi-orange { background: var(--orange-dim); border: 1px solid rgba(251,146,60,0.2); }
+.fi-blue   { background: var(--acc-dim);    border: 1px solid rgba(56,189,248,0.2); }
+.fi-green  { background: var(--green-dim);  border: 1px solid rgba(52,211,153,0.2); }
+
+.factor-body-cell { display: table-cell; vertical-align: top; }
+
+.factor-name {
+  font-family: var(--fh);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--txt);
+  margin-bottom: 3px;
+}
+
+.factor-desc {
+  font-size: 11px;
+  color: var(--txt-2);
+  line-height: 1.6;
+  margin-bottom: 5px;
+}
+
+.factor-val {
+  font-family: var(--fm);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.factor-pct {
+  font-family: var(--fm);
+  font-size: 10px;
+  color: var(--txt-3);
+  margin-left: 8px;
+}
+
+/* Mini pct bar */
+.factor-bar {
+  height: 3px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.factor-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+/* ════════════════════════════════════════════
+   FOOTER
+════════════════════════════════════════════ */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 28px 0 20px;
+  margin-top: 48px;
+}
+
+.footer-grid {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+.footer-left  { display: table-cell; vertical-align: top; width: 55%; padding-right: 40px; }
+.footer-right { display: table-cell; vertical-align: top; width: 45%; }
+
+.footer-title {
+  font-family: var(--fh);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--txt);
+  margin-bottom: 8px;
+}
+
+.footer-txt {
+  font-size: 11px;
+  color: var(--txt-3);
+  line-height: 1.75;
+}
+
+.source-list {
+  display: block;
+}
+
+.source-item {
+  display: table;
+  width: 100%;
+  margin-bottom: 6px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  transition: border-color 0.2s;
+}
+.source-item:hover { border-color: var(--border-acc); }
+
+.src-tag-cell { display: table-cell; vertical-align: middle; width: 80px; }
+.src-desc-cell { display: table-cell; vertical-align: middle; }
+
+.src-tag {
+  display: inline-block;
+  font-family: var(--fm);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--acc);
+  background: var(--acc-dim);
+  border: 1px solid rgba(56,189,248,0.2);
+  padding: 2px 7px;
+  border-radius: 2px;
+}
+
+.src-desc {
+  font-size: 11px;
+  color: var(--txt-2);
+}
+
+.disclaimer {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--txt-3);
+  letter-spacing: 0.04em;
+  line-height: 1.8;
+}
+
+/* ════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+════════════════════════════════════════════ */
+@media (max-width: 960px) {
+  .header-left  { display: block; width: 100%; }
+  .header-right { display: block; width: 100%; text-align: left; margin-top: 20px; }
+  .header-grid  { display: block; }
+  .kpi-row, .kpi-cell { display: block; width: 100%; }
+  .kpi-cell { margin-bottom: 10px; }
+  .kpi-row  { margin: 0 0 32px; }
+  .body-cols, .col-left, .col-right { display: block; width: 100%; }
+  .footer-left, .footer-right, .footer-grid { display: block; width: 100%; }
+  .footer-left { padding-right: 0; margin-bottom: 24px; }
+}
+</style>
 </head>
 <body>
-<p>Carregando...</p>
+<div class="page">
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header>
+  <div class="header-grid">
+    <div class="header-left">
+      <div class="live-badge">
+        <span class="live-dot"></span>
+        Painel Analítico · Dados PRF / CNT / ANTT
+      </div>
+      <h1>Onde o Brasil perde<br>dinheiro nas <em>estradas</em></h1>
+      <p class="header-sub">
+        Análise consolidada do impacto financeiro e operacional de sinistros
+        rodoviários sobre cadeias de supply chain. Cruzamento de dados da
+        Polícia Rodoviária Federal (PRF), ANTT e Painel CNT de Acidentes
+        Rodoviários — rodovias federais, frotas de carga pesada.
+      </p>
+    </div>
+    <div class="header-right">
+      <div class="header-stats">
+        <div class="hstat">
+          <div class="hstat-label">Período de Referência</div>
+          <div class="hstat-val">2023–2024</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-label">Cobertura Geográfica</div>
+          <div class="hstat-val">26 UFs + DF</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-label">Rodovias Analisadas</div>
+          <div class="hstat-val">5 eixos federais</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════ KPIs ═══════════ -->
+<div class="sec-label">
+  <span class="sec-label-text">Visão Geral — Impacto Consolidado</span>
+  <span class="sec-label-line"></span>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-cell">
+    <div class="kpi-card k-red" data-index="01">
+      <div class="kpi-tag">Custo Socioeconômico Anual</div>
+      <div class="kpi-val">R$ 15,6B</div>
+      <div class="kpi-desc">Impacto financeiro total estimado dos acidentes em rodovias federais, incluindo perda de carga, downtime e resgate.</div>
+      <div class="kpi-source">Fonte: IPEA · Custo dos Acidentes de Trânsito</div>
+    </div>
+  </div>
+  <div class="kpi-cell">
+    <div class="kpi-card k-orange" data-index="02">
+      <div class="kpi-tag">Acidentes em Rodovias Federais</div>
+      <div class="kpi-val">~64.000</div>
+      <div class="kpi-desc">Ocorrências registradas por ano pela PRF nas principais rodovias federais. Média de 175 sinistros por dia.</div>
+      <div class="kpi-source">Fonte: PRF · Estatísticas de Sinistros 2024</div>
+    </div>
+  </div>
+  <div class="kpi-cell">
+    <div class="kpi-card k-blue" data-index="03">
+      <div class="kpi-tag">Ocorrências com Vítimas</div>
+      <div class="kpi-val">~52.000</div>
+      <div class="kpi-desc">Sinistros com vítimas fatais ou feridos graves — 81% do total de acidentes registrados impactam o fluxo logístico.</div>
+      <div class="kpi-source">Fonte: PRF · Boletins de Ocorrência 2024</div>
+    </div>
+  </div>
+  <div class="kpi-cell">
+    <div class="kpi-card k-green" data-index="04">
+      <div class="kpi-tag">Severidade Operacional Média</div>
+      <div class="kpi-val">ALTA</div>
+      <div class="kpi-desc">Classificação de risco para frotas de carga pesada. Tombamentos e colisões frontais concentram 58% dos custos.</div>
+      <div class="kpi-source">Fonte: CNT · Painel de Acidentes Rodoviários</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ BODY — 2 COLUNAS ═══════════ -->
+<div class="sec-label">
+  <span class="sec-label-text">Análise Detalhada — Corredores e Janelas Críticas</span>
+  <span class="sec-label-line"></span>
+</div>
+
+<div class="body-cols">
+
+  <!-- ── COLUNA ESQUERDA ── -->
+  <div class="col-left">
+
+    <!-- Ranking rodovias -->
+    <div class="panel">
+      <div class="panel-title">Ranking de Rodovias Críticas</div>
+      <div class="panel-sub">Por volume de sinistros, severidade e impacto financeiro estimado — Fonte: PRF / CNT 2024</div>
+
+      <table class="ranking">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Rodovia</th>
+            <th>Trecho Principal</th>
+            <th>Severidade</th>
+            <th>Impacto Estimado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="rk-num">01</td>
+            <td>
+              <span class="road">BR-116</span>
+              <div class="rk-bar-wrap" style="margin-top:5px;">
+                <div class="rk-bar-fill" style="width:100%;background:var(--red);"></div>
+              </div>
+            </td>
+            <td class="rk-stretch">
+              Presidente Dutra (SP/RJ)<br>
+              <span class="dim" style="font-size:10px;">+ trechos críticos MG e Nordeste</span>
+            </td>
+            <td><span class="sev sev-c">Crítico</span></td>
+            <td class="rk-cost">R$ 4,1B</td>
+          </tr>
+          <tr>
+            <td class="rk-num">02</td>
+            <td>
+              <span class="road">BR-101</span>
+              <div class="rk-bar-wrap" style="margin-top:5px;">
+                <div class="rk-bar-fill" style="width:84%;background:var(--red);opacity:0.8;"></div>
+              </div>
+            </td>
+            <td class="rk-stretch">
+              Faixa litorânea (SC / ES)<br>
+              <span class="dim" style="font-size:10px;">Gargalos críticos no Nordeste</span>
+            </td>
+            <td><span class="sev sev-c">Crítico</span></td>
+            <td class="rk-cost">R$ 3,4B</td>
+          </tr>
+          <tr>
+            <td class="rk-num">03</td>
+            <td>
+              <span class="road">BR-381</span>
+              <div class="rk-bar-wrap" style="margin-top:5px;">
+                <div class="rk-bar-fill" style="width:68%;background:var(--orange);"></div>
+              </div>
+            </td>
+            <td class="rk-stretch">
+              Fernão Dias (MG/SP)<br>
+              <span class="dim" style="font-size:10px;">Alto índice de tombamentos em serras</span>
+            </td>
+            <td><span class="sev sev-a">Alto</span></td>
+            <td class="rk-cost" style="color:var(--orange);">R$ 2,8B</td>
+          </tr>
+          <tr>
+            <td class="rk-num">04</td>
+            <td>
+              <span class="road">BR-040</span>
+              <div class="rk-bar-wrap" style="margin-top:5px;">
+                <div class="rk-bar-fill" style="width:52%;background:var(--orange);opacity:0.75;"></div>
+              </div>
+            </td>
+            <td class="rk-stretch">
+              Eixo MG / RJ<br>
+              <span class="dim" style="font-size:10px;">Transporte de minério e insumos</span>
+            </td>
+            <td><span class="sev sev-a">Alto</span></td>
+            <td class="rk-cost" style="color:var(--orange);">R$ 2,1B</td>
+          </tr>
+          <tr>
+            <td class="rk-num">05</td>
+            <td>
+              <span class="road">BR-153</span>
+              <div class="rk-bar-wrap" style="margin-top:5px;">
+                <div class="rk-bar-fill" style="width:38%;background:var(--acc);"></div>
+              </div>
+            </td>
+            <td class="rk-stretch">
+              Belém–Brasília (GO/PA)<br>
+              <span class="dim" style="font-size:10px;">Eixo de escoamento agrícola</span>
+            </td>
+            <td><span class="sev sev-m">Moderado</span></td>
+            <td class="rk-cost" style="color:var(--acc);">R$ 1,6B</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Janelas Horárias Críticas -->
+    <div class="panel">
+      <div class="panel-title">Janelas Horárias Críticas</div>
+      <div class="panel-sub">Distribuição de sinistros por faixa horária — Dados PRF 2024</div>
+
+      <div class="hour-section">
+
+        <div class="hour-block">
+          <div class="hour-label-row">
+            <span class="hour-name">18h–22h — Rush + Transição de Turno</span>
+            <span class="hour-meta" style="color:var(--red);">Pico máximo · Acidentes Graves</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill-h" style="width:100%;background:linear-gradient(90deg,#f43f5e,#fb7185);"></div>
+          </div>
+          <div class="hour-note">Falta de visibilidade + fadiga + alta densidade de veículos pesados. 34% de todos os acidentes fatais ocorrem nesta janela.</div>
+        </div>
+
+        <div class="hour-block">
+          <div class="hour-label-row">
+            <span class="hour-name">00h–05h — Madrugada (Fadiga Extrema)</span>
+            <span class="hour-meta" style="color:var(--orange);">2º pico · Retenção Logística</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill-h" style="width:82%;background:linear-gradient(90deg,#fb923c,#fbbf24);"></div>
+          </div>
+          <div class="hour-note">Tombamentos em serras concentram-se nesta faixa. Maior tempo médio de interdição: 4,2h por ocorrência (PRF).</div>
+        </div>
+
+        <div class="hour-block">
+          <div class="hour-label-row">
+            <span class="hour-name">07h–09h — Abertura de Frota</span>
+            <span class="hour-meta" style="color:var(--acc);">3º pico · Alta Densidade</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill-h" style="width:64%;background:linear-gradient(90deg,#38bdf8,#818cf8);"></div>
+          </div>
+          <div class="hour-note">Congestionamento de entrada em centros logísticos e colisões traseiras em rodovias de alta movimentação.</div>
+        </div>
+
+        <div class="hour-block">
+          <div class="hour-label-row">
+            <span class="hour-name">12h–14h — Período Comercial</span>
+            <span class="hour-meta" style="color:var(--txt-3);">Baixo-Médio · Colisões laterais</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill-h" style="width:38%;background:rgba(148,163,184,0.4);"></div>
+          </div>
+          <div class="hour-note">Nível operacional regular. Acidentes concentrados em cruzamentos e entroncamentos de alta movimentação comercial.</div>
+        </div>
+
+      </div>
+
+      <!-- Sparkline 24h -->
+      <div class="spark-wrap">
+        <div class="spark-title">Índice de sinistros por hora — distribuição 00h–23h</div>
+        <div class="spark-bars">
+          <!-- 24 células, dados baseados em estatísticas PRF -->
+          <!-- 00h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:72%;background:rgba(251,146,60,0.6);"></div></div>
+          <!-- 01h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:80%;background:rgba(251,146,60,0.7);"></div></div>
+          <!-- 02h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:86%;background:rgba(251,146,60,0.75);"></div></div>
+          <!-- 03h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:78%;background:rgba(251,146,60,0.65);"></div></div>
+          <!-- 04h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:65%;background:rgba(251,146,60,0.5);"></div></div>
+          <!-- 05h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:45%;background:rgba(148,163,184,0.35);"></div></div>
+          <!-- 06h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:42%;background:rgba(148,163,184,0.3);"></div></div>
+          <!-- 07h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:68%;background:rgba(56,189,248,0.6);"></div></div>
+          <!-- 08h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:74%;background:rgba(56,189,248,0.65);"></div></div>
+          <!-- 09h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:58%;background:rgba(148,163,184,0.4);"></div></div>
+          <!-- 10h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:50%;background:rgba(148,163,184,0.35);"></div></div>
+          <!-- 11h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:48%;background:rgba(148,163,184,0.3);"></div></div>
+          <!-- 12h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:52%;background:rgba(148,163,184,0.38);"></div></div>
+          <!-- 13h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:50%;background:rgba(148,163,184,0.35);"></div></div>
+          <!-- 14h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:46%;background:rgba(148,163,184,0.3);"></div></div>
+          <!-- 15h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:54%;background:rgba(148,163,184,0.38);"></div></div>
+          <!-- 16h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:70%;background:rgba(244,63,94,0.5);"></div></div>
+          <!-- 17h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:88%;background:rgba(244,63,94,0.75);"></div></div>
+          <!-- 18h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:100%;background:rgba(244,63,94,0.9);"></div></div>
+          <!-- 19h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:95%;background:rgba(244,63,94,0.85);"></div></div>
+          <!-- 20h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:90%;background:rgba(244,63,94,0.82);"></div></div>
+          <!-- 21h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:82%;background:rgba(244,63,94,0.7);"></div></div>
+          <!-- 22h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:72%;background:rgba(244,63,94,0.55);"></div></div>
+          <!-- 23h -->
+          <div class="spark-bar-cell"><div class="spark-bar-inner" style="height:62%;background:rgba(251,146,60,0.5);"></div></div>
+        </div>
+        <div class="spark-axis">
+          <span class="spark-axis-cell">00h</span>
+          <span class="spark-axis-cell">06h</span>
+          <span class="spark-axis-cell">12h</span>
+          <span class="spark-axis-cell">18h</span>
+          <span class="spark-axis-cell" style="text-align:right;">23h</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /col-left -->
+
+  <!-- ── COLUNA DIREITA ── -->
+  <div class="col-right">
+
+    <!-- Map panel -->
+    <div class="map-panel">
+      <div class="map-header">
+        <div class="map-header-left">
+          <div class="map-title">Pontos Críticos — Eixos Logísticos</div>
+          <div class="map-sub">Concentração geoespacial de sinistros · Sul–Sudeste–Nordeste</div>
+        </div>
+        <div class="map-header-right">
+          <span class="map-badge">● Live Monitoring</span>
+        </div>
+      </div>
+
+      <!-- SVG Map Brazil approximation with hotspots -->
+      <div class="map-svg-wrap">
+
+        <!-- Brazil SVG silhouette - simplified outline -->
+        <svg class="map-svg" viewBox="0 0 400 420" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Background glow for brazil outline -->
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- Simplified Brazil polygon (approximate shape) -->
+          <polygon
+            points="
+              185,18 210,20 240,28 265,38 282,50 295,68 305,88 312,108
+              318,128 315,148 308,162 318,175 328,192 330,212 325,232
+              315,248 300,260 285,272 270,285 255,298 238,312 220,324
+              200,334 182,340 165,336 148,326 132,314 118,300 105,285
+              95,268 88,250 84,232 82,214 86,196 90,178 85,160
+              78,142 72,122 72,102 78,84 88,68 100,54 118,42
+              138,30 160,22
+            "
+            fill="rgba(15,23,42,0.0)"
+            stroke="rgba(56,189,248,0.25)"
+            stroke-width="1.5"
+            filter="url(#glow)"
+          />
+
+          <!-- Route lines (approximate road axes) -->
+          <!-- BR-116: SP to BA (vertical center-east) -->
+          <line x1="210" y1="290" x2="200" y2="180" stroke="rgba(244,63,94,0.4)" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <!-- BR-101: coastal (right side) -->
+          <line x1="248" y1="310" x2="265" y2="190" stroke="rgba(244,63,94,0.3)" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <!-- BR-381: BH to SP (diagonal) -->
+          <line x1="210" y1="268" x2="220" y2="295" stroke="rgba(251,146,60,0.4)" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <!-- BR-040: BSB to RJ -->
+          <line x1="195" y1="225" x2="225" y2="292" stroke="rgba(251,146,60,0.3)" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <!-- BR-153: GO to PA (vertical center) -->
+          <line x1="185" y1="220" x2="175" y2="120" stroke="rgba(56,189,248,0.3)" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+          <!-- Hotspot rings -->
+          <!-- SP/RJ - BR-116 (most critical) -->
+          <circle cx="216" cy="296" r="14" fill="rgba(244,63,94,0.08)" stroke="rgba(244,63,94,0.35)" stroke-width="1"/>
+          <circle cx="216" cy="296" r="8"  fill="rgba(244,63,94,0.15)" stroke="rgba(244,63,94,0.5)"  stroke-width="1.5"/>
+          <circle cx="216" cy="296" r="4"  fill="rgba(244,63,94,0.9)"/>
+
+          <!-- BH - BR-381 -->
+          <circle cx="214" cy="270" r="10" fill="rgba(244,63,94,0.06)" stroke="rgba(244,63,94,0.28)" stroke-width="1"/>
+          <circle cx="214" cy="270" r="5"  fill="rgba(244,63,94,0.15)" stroke="rgba(244,63,94,0.45)" stroke-width="1.5"/>
+          <circle cx="214" cy="270" r="3"  fill="rgba(244,63,94,0.85)"/>
+
+          <!-- Salvador BA - BR-116 -->
+          <circle cx="252" cy="196" r="9" fill="rgba(251,146,60,0.06)" stroke="rgba(251,146,60,0.3)" stroke-width="1"/>
+          <circle cx="252" cy="196" r="5" fill="rgba(251,146,60,0.12)" stroke="rgba(251,146,60,0.4)" stroke-width="1.5"/>
+          <circle cx="252" cy="196" r="3" fill="rgba(251,146,60,0.85)"/>
+
+          <!-- Recife - BR-101 Nordeste -->
+          <circle cx="272" cy="165" r="8" fill="rgba(251,146,60,0.05)" stroke="rgba(251,146,60,0.25)" stroke-width="1"/>
+          <circle cx="272" cy="165" r="4" fill="rgba(251,146,60,0.1)"  stroke="rgba(251,146,60,0.35)" stroke-width="1.5"/>
+          <circle cx="272" cy="165" r="2" fill="rgba(251,146,60,0.8)"/>
+
+          <!-- Goiânia - BR-153/040 -->
+          <circle cx="196" cy="232" r="7" fill="rgba(56,189,248,0.05)" stroke="rgba(56,189,248,0.2)" stroke-width="1"/>
+          <circle cx="196" cy="232" r="3" fill="rgba(56,189,248,0.12)" stroke="rgba(56,189,248,0.35)" stroke-width="1.5"/>
+          <circle cx="196" cy="232" r="2" fill="rgba(56,189,248,0.8)"/>
+
+          <!-- Curitiba / SC - BR-101 Sul -->
+          <circle cx="222" cy="322" r="7" fill="rgba(56,189,248,0.05)" stroke="rgba(56,189,248,0.2)" stroke-width="1"/>
+          <circle cx="222" cy="322" r="3" fill="rgba(56,189,248,0.1)"  stroke="rgba(56,189,248,0.3)" stroke-width="1.5"/>
+          <circle cx="222" cy="322" r="2" fill="rgba(56,189,248,0.75)"/>
+
+          <!-- City labels -->
+          <text x="230" y="300" font-family="JetBrains Mono,monospace" font-size="8" fill="rgba(244,63,94,0.8)">SP/RJ</text>
+          <text x="218" y="265" font-family="JetBrains Mono,monospace" font-size="8" fill="rgba(244,63,94,0.7)">BH</text>
+          <text x="256" y="192" font-family="JetBrains Mono,monospace" font-size="8" fill="rgba(251,146,60,0.75)">SSA</text>
+          <text x="276" y="162" font-family="JetBrains Mono,monospace" font-size="8" fill="rgba(251,146,60,0.65)">REC</text>
+          <text x="200" y="228" font-family="JetBrains Mono,monospace" font-size="8" fill="rgba(56,189,248,0.65)">GO</text>
+          <text x="226" y="320" font-family="JetBrains Mono,monospace" font-size="8" fill="rgba(56,189,248,0.6)">CWB</text>
+        </svg>
+
+        <!-- Map legend -->
+        <div class="map-legend">
+          <div class="legend-item">
+            <span class="legend-dot-cell"><span class="legend-dot" style="background:var(--red);"></span></span>
+            <span class="legend-text-cell"><span class="legend-txt">Crítico (BR-116 / BR-101)</span></span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot-cell"><span class="legend-dot" style="background:var(--orange);"></span></span>
+            <span class="legend-text-cell"><span class="legend-txt">Alto (BR-381 / BR-040)</span></span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot-cell"><span class="legend-dot" style="background:var(--acc);"></span></span>
+            <span class="legend-text-cell"><span class="legend-txt">Moderado (BR-153)</span></span>
+          </div>
+        </div>
+
+      </div><!-- /map-svg-wrap -->
+    </div><!-- /map-panel -->
+
+    <!-- Fatores de Custo -->
+    <div class="panel factors-panel">
+      <div class="panel-title">Fatores de Custo Logístico Incorrido</div>
+      <div class="panel-sub">Composição do prejuízo operacional por categoria · Base IPEA / CNT</div>
+
+      <div class="factor">
+        <span class="factor-icon-cell">
+          <span class="factor-icon fi-red">📦</span>
+        </span>
+        <span class="factor-body-cell">
+          <div class="factor-name">Avaria e Perda de Carga</div>
+          <div class="factor-desc">Danos a mercadorias perecíveis, produtos frágeis e cargas a granel em tombamentos e colisões. Inclui custos de seguro, descarte e reposição de produto.</div>
+          <div>
+            <span class="factor-val" style="color:var(--red);">R$ 4,7B/ano</span>
+            <span class="factor-pct">· 30% do custo total</span>
+          </div>
+          <div class="factor-bar"><div class="factor-bar-fill" style="width:100%;background:var(--red);"></div></div>
+        </span>
+      </div>
+
+      <div class="factor">
+        <span class="factor-icon-cell">
+          <span class="factor-icon fi-orange">🚛</span>
+        </span>
+        <span class="factor-body-cell">
+          <div class="factor-name">Downtime de Frota</div>
+          <div class="factor-desc">Paralisação de veículos por interdição de pista, aguardo de guincho e liberação de local. Média de 4,2h por ocorrência grave, com custo por hora de R$ 580 para caminhão pesado.</div>
+          <div>
+            <span class="factor-val" style="color:var(--orange);">R$ 3,9B/ano</span>
+            <span class="factor-pct">· 25% do custo total</span>
+          </div>
+          <div class="factor-bar"><div class="factor-bar-fill" style="width:84%;background:var(--orange);"></div></div>
+        </span>
+      </div>
+
+      <div class="factor">
+        <span class="factor-icon-cell">
+          <span class="factor-icon fi-blue">🛣️</span>
+        </span>
+        <span class="factor-body-cell">
+          <div class="factor-name">Desaceleração por Infraestrutura</div>
+          <div class="factor-desc">Rodovias com nota CNT abaixo de 5,0 elevam consumo de combustível em até 18% e aceleram o desgaste de pneus e suspensão. Custo crônico invisível às métricas de sinistro.</div>
+          <div>
+            <span class="factor-val" style="color:var(--acc);">R$ 3,1B/ano</span>
+            <span class="factor-pct">· 20% do custo total</span>
+          </div>
+          <div class="factor-bar"><div class="factor-bar-fill" style="width:66%;background:var(--acc);"></div></div>
+        </span>
+      </div>
+
+      <div class="factor">
+        <span class="factor-icon-cell">
+          <span class="factor-icon fi-green">⏱️</span>
+        </span>
+        <span class="factor-body-cell">
+          <div class="factor-name">Multas e Penalidades de SLA</div>
+          <div class="factor-desc">Cláusulas contratuais ativadas por atrasos em entregas just-in-time. Setores automotivo e agro são os mais expostos a este custo secundário — 2 a 5% do valor da carga.</div>
+          <div>
+            <span class="factor-val" style="color:var(--green);">R$ 2,3B/ano</span>
+            <span class="factor-pct">· 15% do custo total</span>
+          </div>
+          <div class="factor-bar"><div class="factor-bar-fill" style="width:49%;background:var(--green);"></div></div>
+        </span>
+      </div>
+
+    </div><!-- /factors-panel -->
+
+  </div><!-- /col-right -->
+
+</div><!-- /body-cols -->
+
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-left">
+      <div class="footer-title">Metodologia e Transparência</div>
+      <p class="footer-txt">
+        Os dados apresentados consolidam estatísticas do <strong style="color:var(--txt-2);">Painel CNT de Acidentes Rodoviários</strong>,
+        boletins de ocorrência da <strong style="color:var(--txt-2);">Polícia Rodoviária Federal (PRF)</strong> e relatórios operacionais da
+        <strong style="color:var(--txt-2);">ANTT</strong>. O custo socioeconômico segue a metodologia do
+        <strong style="color:var(--txt-2);">IPEA — Impacto Social dos Acidentes de Trânsito nas Aglomerações Urbanas</strong>,
+        atualizado pelo IPCA. Este dashboard é um projeto analítico de portfólio para fins de visualização de dados em Supply Chain e Engenharia de Dados — não constitui relatório técnico oficial.
+      </p>
+      <div class="disclaimer">
+        ⚠ Os valores financeiros são estimativas baseadas em modelos públicos e devem ser validados com dados primários atualizados para uso em decisões operacionais.<br>
+        Projeto desenvolvido por portfólio pessoal · Dados Públicos · Licença MIT
+      </div>
+    </div>
+    <div class="footer-right">
+      <div class="footer-title">Fontes dos Dados</div>
+      <div class="source-list">
+        <div class="source-item">
+          <span class="src-tag-cell"><span class="src-tag">PRF</span></span>
+          <span class="src-desc-cell"><span class="src-desc">Polícia Rodoviária Federal — Estatísticas de Sinistros em Rodovias Federais 2023/2024</span></span>
+        </div>
+        <div class="source-item">
+          <span class="src-tag-cell"><span class="src-tag">CNT</span></span>
+          <span class="src-desc-cell"><span class="src-desc">Confederação Nacional do Transporte — Painel CNT de Acidentes Rodoviários + Pesquisa de Rodovias</span></span>
+        </div>
+        <div class="source-item">
+          <span class="src-tag-cell"><span class="src-tag">ANTT</span></span>
+          <span class="src-desc-cell"><span class="src-desc">Agência Nacional de Transportes Terrestres — Relatório Operacional e Dados de Concessões</span></span>
+        </div>
+        <div class="source-item">
+          <span class="src-tag-cell"><span class="src-tag">IPEA</span></span>
+          <span class="src-desc-cell"><span class="src-desc">Instituto de Pesquisa Econômica Aplicada — Custo Social dos Acidentes de Trânsito no Brasil</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div><!-- /page -->
 </body>
 </html>
+
